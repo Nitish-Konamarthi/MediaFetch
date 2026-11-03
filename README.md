@@ -25,4 +25,4 @@ Use Node.js 22.13 or later in the 22.x line, or Node.js 24 or later, with npm. I
 - `npm run build` — build the unpacked Chrome extension in `dist/`.
 - `npm run check` — run formatting, lint, type checks, unit tests, and build.
 
-The current implementation is the toolchain and core provider foundation. It does not yet connect the provider registry to the Side Panel or implement downloads. See the [roadmap](docs/ROADMAP.md) for the feature sequence.
+The current implementation includes the Side Panel paste-and-analyze flow, typed background messaging, Chrome-managed downloads, progress/status display, local history, and recovery. The approved source host and extension allowlists are intentionally empty, so production URL analysis currently fails closed and no live download source is enabled. See the [roadmap](docs/ROADMAP.md) for remaining release work.

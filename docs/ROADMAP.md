@@ -7,16 +7,15 @@ This roadmap separates the standalone extension from any later backend work. Eac
 - Establish requirements, architecture, security boundaries, provider scope, test strategy, roadmap, agent guidance, and ADRs.
 - Set up the React, TypeScript, Vite, Manifest V3, lint, format, unit-test, and CI foundation.
 - Define core media types, provider contract/registry, HTTPS URL validation, and a direct-media provider with no production host allowlist.
+- Implement Side Panel URL analysis, typed service-worker messaging, Chrome Downloads API initiation/events/cancellation, local download history, and restart reconciliation.
 
-Before enabling any real source, resolve the initial hostname and file-extension allowlists. Resolve local history retention before implementing persistent history.
+Before enabling any real source, resolve the initial hostname and file-extension allowlists and review redirect behavior. Local history retention is user-controlled: records remain until the user clears MediaFetch history.
 
 ## Phase 1 — standalone extension
 
-1. Build the Side Panel paste-and-validate flow and explicit unsupported states.
-2. Select authorized direct-media host and extension allowlists; wire the direct-media provider.
-3. Add typed UI-to-worker messaging and browser-managed downloads.
-4. Add download progress/error presentation, minimal local history, and restart recovery.
-5. Complete browser, security, accessibility, and release verification; document and release the standalone extension.
+1. Select an authorized direct-media host and extension allowlist; review redirect handling before enabling downloads.
+2. Complete controlled-source Chrome testing, accessibility review, and release-readiness security review.
+3. Document and release the standalone extension.
 
 ## Phase 2 — backend and cloud (deferred)
 

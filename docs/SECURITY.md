@@ -20,7 +20,9 @@
 
 The approved baseline is `sidePanel`, `downloads`, and `storage`. Avoid `tabs`, `activeTab`, content scripts, and broad `host_permissions` for the paste-only workflow. Add a permission only when a specific approved feature needs it and document the reason.
 
-Keep state in `chrome.storage.local` only when needed for the download experience. Do not store media bytes, credentials, or unrelated browsing data. Exact URL and download-history retention behavior remains undecided and must be settled before implementing persistent history.
+Keep state in `chrome.storage.local` only when needed for the download experience. Do not store media bytes, submitted URLs, credentials, absolute local paths, or unrelated browsing data. MediaFetch history persists until the user clears it; clearing MediaFetch history does not delete files or alter Chrome's download history.
+
+Chrome documents that [`downloads.download()` includes cookies already set for the requested hostname](https://developer.chrome.com/docs/extensions/reference/api/downloads). Keep the approved source list explicit and empty until each source and its redirect behavior are reviewed. Do not add host permissions or use download initiation to test unapproved hosts.
 
 ## Runtime and dependency safety
 

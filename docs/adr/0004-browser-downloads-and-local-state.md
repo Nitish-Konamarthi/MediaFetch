@@ -13,6 +13,6 @@ Use Chrome's Downloads API to start, monitor, and cancel downloads. Store only m
 
 ## Consequences
 
-Chrome remains responsible for saving files and reporting download status. Local history retention and URL persistence must be decided before implementing persistent history.
+Chrome remains responsible for saving files and reporting download status. MediaFetch stores no submitted URL or absolute path. Its minimal history remains until the user clears MediaFetch history; clearing it does not delete downloaded files or alter Chrome's own download history.
 
 See [architecture](../ARCHITECTURE.md), [security](../SECURITY.md), and [test plan](../TEST-PLAN.md).

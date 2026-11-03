@@ -56,5 +56,4 @@ The extension targets Chrome 114 or later for the Side Panel API. MVP capabiliti
 
 - Which exact hostnames/providers should be allowlisted for the initial release?
 - How should an approved download link that redirects to a different hostname be handled?
-- How long should local download history be retained, and should users have a history-clear control?
 - Which source-reported metadata fields are essential when a source supplies only partial information?

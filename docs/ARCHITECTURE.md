@@ -8,12 +8,13 @@ MediaFetch is a local first Chrome Manifest V3 extension with the Side Panel as 
 
 | Component | Responsibility |
 | --- | --- |
-| Side Panel UI | Accept a pasted URL, present validation and source-reported options, start a selected download, and display its state. |
-| Extension service worker | Handle typed extension messages, coordinate source analysis and downloads, subscribe to Chrome download events, and recover state after worker restarts. |
+| Side Panel UI | Accept a pasted URL, present the analysis result and source-reported options, start a selected download, and display persisted download state. |
+| Application service | Apply HTTPS and host validation, resolve providers, and re-resolve a user-selected option before download initiation. |
+| Extension service worker | Register typed message and Downloads API listeners at top level, coordinate source analysis and downloads, and reconcile state after worker restarts. |
 | Provider registry and adapters | Match an allowlisted source and return only its authorized, source-reported media information and download options. Unsupported sources return an explicit unsupported result. |
 | Download manager | Start, monitor, and cancel downloads through `chrome.downloads`; translate browser events into user-facing state. |
-| Storage layer | Persist minimal user-visible download metadata in `chrome.storage.local`; do not store media bytes. |
-| Shared contracts | Define the conceptual URL analysis result, media option, download state, request, and error shapes shared by the UI and worker. |
+| Storage layer | Persist minimal user-visible download metadata in `chrome.storage.local`; do not store media bytes or submitted URLs. |
+| Shared contracts | Define URL analysis results, media options, download history, requests, and typed errors shared by the UI and worker. |
 
 ## Data flow
 
@@ -21,7 +22,8 @@ MediaFetch is a local first Chrome Manifest V3 extension with the Side Panel as 
 2. The worker validates the URL and selects a registered adapter using the explicit hostname allowlist.
 3. The adapter returns supported metadata and authorized download options, or a typed unsupported/error result. It must not invent options or scrape arbitrary pages.
 4. The UI displays the result. The user explicitly selects an option and asks to download it.
-5. The worker starts the chosen URL with `chrome.downloads`; browser events update the local state and UI.
+5. The worker re-validates the source and selected option, then starts it with `chrome.downloads`; the returned Chrome ID is persisted with the initial in-progress record.
+6. Top-level download listeners update terminal state; while the panel is open it polls `downloads.search` for byte counts and reconciles persisted records on open.
 
 No content script, active-tab URL read, or automatic media detection is in the MVP.
 
@@ -31,11 +33,11 @@ Provider resolution uses a discriminated result: `ready` contains one or more va
 
 ## Messaging and errors
 
-Use a typed request/response boundary between the Side Panel and service worker. Messages cover analysis, download start, cancellation, and state updates. Keep Chrome API calls in the worker-facing services rather than in UI components. Return actionable errors for invalid input, unsupported source, unavailable source metadata, permission/API failure, download failure, and cancellation. Do not expose raw internal exceptions as user-facing text.
+Use the dedicated typed message module for analysis, download start, cancellation, history refresh, and history clear. Keep Chrome API calls in worker-facing services rather than UI components. Return actionable errors for invalid input, unsupported source, browser API failure, download failure, and cancellation. Do not expose raw internal exceptions as user-facing text.
 
 ## Service worker lifecycle and storage
 
-Manifest V3 service workers are event-driven and may stop while idle. Treat the worker as restartable: do not rely on in-memory globals for durable download state. Persist the minimum state needed to restore the panel's view in `chrome.storage.local`, and use Chrome download events and state to reconcile active downloads. Storage holds metadata only, never downloaded file contents. Retention policy remains an open product question.
+Manifest V3 service workers are event-driven and may stop while idle. Treat the worker as restartable: do not rely on in-memory globals for durable download state. Persist the minimum state needed to restore the panel's view in `chrome.storage.local`, and use Chrome download events and state to reconcile active downloads. Chrome does not emit `onChanged` events for `bytesReceived`, so the open panel periodically queries tracked Chrome IDs for progress ([Downloads API](https://developer.chrome.com/docs/extensions/reference/api/downloads)). Register event listeners at service-worker top level and persist state for recovery ([service-worker lifecycle](https://developer.chrome.com/docs/extensions/develop/concepts/service-workers/lifecycle)). Storage holds sanitized filenames, Chrome IDs, timestamps, state, and byte counts only; it omits submitted URLs and absolute local paths. History remains until the user clears MediaFetch history.
 
 ## Permissions and platform
 
@@ -48,12 +50,13 @@ extension/
   manifest.json
   index.html
   src/
-    sidepanel/       # React UI
+    sidepanel/       # React UI and application state
     background/      # MV3 service worker and message routing
+    application/     # URL analysis and option selection orchestration
     providers/       # registry, adapters, source contracts
-    downloads/       # chrome.downloads coordination
-    storage/         # local persistence
-    shared/          # common types and validation
+    downloads/       # chrome.downloads coordination and state mapping
+    storage/         # validated local history persistence
+    shared/          # common types, messages, configuration, and validation
   tests/
     unit/
     browser/
@@ -61,7 +64,7 @@ scripts/
   copy-manifest.mjs
 ```
 
-The configuration and core provider foundation are now present. UI analysis flow, service-worker messaging, downloads, and history remain future milestones.
+The Side Panel, typed messaging, download manager, progress/status display, and local history/recovery are implemented. No production source is enabled while the approved host and extension allowlists remain empty.
 
 ## Future backend boundary
 
